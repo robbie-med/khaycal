@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Peds shift intake</title>
+  <meta name="description" content="Clinical calculator for kcal/kg per shift from total volume, shift duration, and weight." />
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --line:#e2e8f0;
+      --accent:#2563eb;
+      --accent2:#1d4ed8;
+      --good:#16a34a;
+      --warn:#d97706;
+      --bad:#dc2626;
+      --shadow: 0 10px 28px rgba(15,23,42,.08);
+      --radius:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(900px 500px at 10% -10%, rgba(37,99,235,.09), transparent 60%),
+        radial-gradient(900px 500px at 90% 0%, rgba(22,163,74,.07), transparent 55%),
+        radial-gradient(900px 500px at 50% 110%, rgba(217,119,6,.06), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.42;
+    }
+    .wrap{
+      max-width:1020px;
+      margin:0 auto;
+      padding:30px 16px 46px;
+    }
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+    h1{
+      margin:0;
+      font-size:18px;
+      font-weight:820;
+      letter-spacing:.2px;
+    }
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:13px;
+      max-width:780px;
+    }
+
+    main{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:14px;
+    }
+    @media (max-width: 900px){
+      main{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:15px;
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size:13px;
+      font-weight:850;
+      color:#111827;
+      letter-spacing:.18px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 560px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    input, select{
+      width:100%;
+      padding:10px 11px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      font-size:14px;
+      color:var(--text);
+      background:#fff;
+      outline:none;
+    }
+    input:focus, select:focus{
+      border-color: rgba(37,99,235,.55);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .btn{
+      cursor:pointer;
+      border:1px solid rgba(37,99,235,.28);
+      background:linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.06));
+      color:var(--text);
+      padding:9px 12px;
+      border-radius:12px;
+      font-weight:820;
+      font-size:13px;
+      user-select:none;
+      box-shadow: 0 6px 18px rgba(37,99,235,.08);
+    }
+    .btn:hover{ background:linear-gradient(180deg, rgba(37,99,235,.13), rgba(37,99,235,.07)); }
+    .btn:active{ transform:translateY(1px); }
+    .btn.secondary{
+      border-color:var(--line);
+      background:#f8fafc;
+      color:var(--muted);
+      font-weight:780;
+      box-shadow:none;
+    }
+
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .chip{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      background:#fff;
+    }
+    .mono{ font-family:var(--mono); }
+
+    .stats{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 560px){
+      .stats{grid-template-columns:1fr}
+    }
+    .stat{
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:linear-gradient(180deg, #ffffff, #fbfdff);
+    }
+    .k{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    .v{
+      font-size:18px;
+      font-weight:860;
+      letter-spacing:.2px;
+    }
+    .tag{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .score{
+      margin-top:10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      background:#fff;
+    }
+    .scoreline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .status{
+      font-weight:860;
+      font-size:12px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+      background:#fff;
+      white-space:nowrap;
+    }
+    .status.good{ color:var(--good); border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.06); }
+    .status.warn{ color:var(--warn); border-color: rgba(217,119,6,.25); background: rgba(217,119,6,.06); }
+    .status.bad{  color:var(--bad);  border-color: rgba(220,38,38,.25); background: rgba(220,38,38,.06); }
+
+    .bar{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:#eef2f7;
+      overflow:hidden;
+      border:1px solid var(--line);
+    }
+    .fill{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(22,163,74,.95), rgba(37,99,235,.9));
+      transition:width .2s ease;
+    }
+    .note{
+      margin-top:9px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    details{
+      margin-top:10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      padding:10px 12px;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:860;
+      font-size:13px;
+      color:#111827;
+    }
+    .small{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+    }
+    .small ul{ margin:8px 0 0 18px; padding:0; }
+    .small li{ margin:6px 0; }
+
+    .guidance{
+      margin-top:10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:linear-gradient(180deg, #ffffff, #fbfdff);
+      padding:12px;
+    }
+    .guidance h3{
+      margin:0 0 8px;
+      font-size:13px;
+      font-weight:860;
+      color:#111827;
+      letter-spacing:.1px;
+    }
+    .ggrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 560px){
+      .ggrid{grid-template-columns:1fr}
+    }
+    .gbox{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      background:#fff;
+    }
+    .gtitle{
+      font-size:12px;
+      font-weight:860;
+      color:#111827;
+      margin-bottom:6px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .gtext{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .gtext .mono{ font-size:12px; }
+
+    footer{
+      margin-top:18px;
+      display:flex;
+      justify-content:center;
+    }
+    .foot{
+      width:100%;
+      max-width:1020px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.78);
+      box-shadow: 0 10px 26px rgba(15,23,42,.06);
+      padding:10px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .foot a{
+      color:var(--muted);
+      text-decoration:none;
+      font-weight:860;
+    }
+    .foot a:hover{ color:var(--accent2); text-decoration:underline; }
+    .sep{
+      opacity:.55;
+      user-select:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Peds shift intake</h1>
+        <div class="sub">
+          Shift-based intake math for rounds. Total volume → kcal/kg/shift, with a day estimate and goal check.
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Inputs</h2>
+
+        <div class="grid">
+          <div>
+            <label for="weightKg">Weight, kg</label>
+            <input id="weightKg" inputmode="decimal" placeholder="10.2" />
+          </div>
+
+          <div>
+            <label for="shiftHours">Shift, hours</label>
+            <input id="shiftHours" inputmode="decimal" placeholder="12" />
+          </div>
+
+          <div>
+            <label for="volumeMl">Total volume, mL</label>
+            <input id="volumeMl" inputmode="decimal" placeholder="650" />
+          </div>
+
+          <div>
+            <label for="kcalPerMl">Energy density</label>
+            <select id="kcalPerMl">
+              <option value="0.67" selected>Human milk</option>
+              <option value="0.70">22 kcal/oz</option>
+              <option value="0.80">24 kcal/oz</option>
+              <option value="1.00">30 kcal/oz</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="goalPreset">Goal, kcal/kg/day</label>
+            <select id="goalPreset">
+              <option value="100" selected>Infant 100</option>
+              <option value="90">Older infant 90</option>
+              <option value="80">Child 80</option>
+              <option value="120">Catch-up 120</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="goalCustom">Custom goal</label>
+            <input id="goalCustom" inputmode="decimal" placeholder="e.g., 110" disabled />
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn" id="calcBtn">Calculate</button>
+          <button class="btn secondary" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="chips">
+          <div class="chip"><span class="mono">kcal = mL × density</span></div>
+          <div class="chip"><span class="mono">kcal/kg/shift = kcal ÷ kg</span></div>
+          <div class="chip"><span class="mono">kcal/kg/day = shift × (24 ÷ hrs)</span></div>
+        </div>
+
+        <details>
+          <summary>Documentation tips</summary>
+          <div class="small">
+            <ul>
+              <li>Use the EMR’s total PO volume for the shift, not per-feed estimates.</li>
+              <li>For nursing without measured transfer, document method and uncertainty.</li>
+              <li>If labs are a concern, pair with sodium trend, ketones, and weight trajectory.</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2>Results</h2>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="k">Total kcal <span class="tag">shift</span></div>
+            <div class="v" id="outKcal">—</div>
+          </div>
+
+          <div class="stat">
+            <div class="k">kcal/kg <span class="tag">shift</span></div>
+            <div class="v" id="outKcalKgShift">—</div>
+          </div>
+
+          <div class="stat">
+            <div class="k">kcal/kg <span class="tag">day</span></div>
+            <div class="v" id="outKcalKgDay">—</div>
+          </div>
+
+          <div class="stat">
+            <div class="k">mL/kg <span class="tag">shift</span></div>
+            <div class="v" id="outMlKgShift">—</div>
+          </div>
+        </div>
+
+        <div class="score" aria-live="polite">
+          <div class="scoreline">
+            <div style="font-weight:860;color:#111827;font-size:13px;">Goal</div>
+            <span id="statusChip" class="status">—</span>
+          </div>
+          <div class="bar"><div id="goalFill" class="fill"></div></div>
+          <div class="note" id="interpretation">Enter inputs and calculate.</div>
+        </div>
+
+        <div class="guidance">
+          <h3>Guidance</h3>
+          <div class="ggrid">
+            <div class="gbox">
+              <div class="gtitle">What this means <span class="tag">rounds</span></div>
+              <div class="gtext">
+                Use <span class="mono">kcal/kg/shift</span> to sanity-check “PO adequate.”
+                Low shift intake can explain weight loss, rising sodium, ketones, or poor UOP.
+              </div>
+            </div>
+            <div class="gbox">
+              <div class="gtitle">Closing the gap <span class="tag">action</span></div>
+              <div class="gtext" id="gapText">
+                After calculation, you’ll see an estimated shortfall and the mL/kg needed to reach goal.
+              </div>
+            </div>
+            <div class="gbox">
+              <div class="gtitle">Common targets <span class="tag">heuristic</span></div>
+              <div class="gtext">
+                Infant 100–120. Older infant 90–100. Child 80–90. Catch-up 110–130.
+                Use local protocol and RD input when stakes are high.
+              </div>
+            </div>
+            <div class="gbox">
+              <div class="gtitle">Caveats <span class="tag">context</span></div>
+              <div class="gtext">
+                Losses and insensible needs vary. Correlate with emesis/diarrhea, diuresis, and clinical work of breathing.
+              </div>
+            </div>
+          </div>
+
+          <details>
+            <summary>Default assumptions</summary>
+            <div class="small">
+              <ul>
+                <li>Human milk modeled as <span class="mono">0.67 kcal/mL</span>.</li>
+                <li>Day estimate extrapolates linearly from the shift rate.</li>
+                <li>This is decision-support, not a discharge criteria by itself.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="foot">
+        <a href="https://robbiemed.org" target="_blank" rel="noopener">made by robbie.med</a>
+        <span class="sep">| |</span>
+        <a href="mailto:talk@robbiemed.org">get in contact</a>
+        <span class="sep">•</span>
+        <span>A.D. 2025, S.D.G.</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const weightKg = $("weightKg");
+    const shiftHours = $("shiftHours");
+    const volumeMl = $("volumeMl");
+    const kcalPerMl = $("kcalPerMl");
+    const goalPreset = $("goalPreset");
+    const goalCustom = $("goalCustom");
+
+    const outKcal = $("outKcal");
+    const outKcalKgShift = $("outKcalKgShift");
+    const outKcalKgDay = $("outKcalKgDay");
+    const outMlKgShift = $("outMlKgShift");
+
+    const statusChip = $("statusChip");
+    const goalFill = $("goalFill");
+    const interpretation = $("interpretation");
+    const gapText = $("gapText");
+
+    function toNum(x){
+      const n = Number(String(x).trim());
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function fmt(n, digits=1){
+      if (!Number.isFinite(n)) return "—";
+      return n.toFixed(digits);
+    }
+
+    function getGoal(){
+      if (goalPreset.value === "custom") return toNum(goalCustom.value);
+      return toNum(goalPreset.value);
+    }
+
+    function setStatus(kind, text){
+      statusChip.className = "status " + (kind || "");
+      statusChip.textContent = text || "—";
+    }
+
+    function clearOutputs(){
+      outKcal.textContent = "—";
+      outKcalKgShift.textContent = "—";
+      outKcalKgDay.textContent = "—";
+      outMlKgShift.textContent = "—";
+      goalFill.style.width = "0%";
+      setStatus("", "—");
+      interpretation.textContent = "Enter inputs and calculate.";
+      gapText.textContent = "After calculation, you’ll see an estimated shortfall and the mL/kg needed to reach goal.";
+    }
+
+    function updateCustom(){
+      const isCustom = goalPreset.value === "custom";
+      goalCustom.disabled = !isCustom;
+      if (!isCustom) goalCustom.value = "";
+    }
+
+    function calc(){
+      const w = toNum(weightKg.value);
+      const hrs = toNum(shiftHours.value);
+      const vol = toNum(volumeMl.value);
+      const dens = toNum(kcalPerMl.value);
+      const goal = getGoal();
+
+      const errs = [];
+      if (!(w > 0)) errs.push("Weight");
+      if (!(hrs > 0 && hrs <= 24)) errs.push("Shift");
+      if (!(vol >= 0)) errs.push("Volume");
+      if (!(dens > 0)) errs.push("Density");
+      if (!(goal > 0)) errs.push("Goal");
+
+      if (errs.length){
+        clearOutputs();
+        setStatus("bad", "Check inputs");
+        interpretation.textContent = "Missing or invalid: " + errs.join(", ") + ".";
+        return;
+      }
+
+      const totalKcal = vol * dens;
+      const kcalKgShift = totalKcal / w;
+      const kcalKgDay = kcalKgShift * (24 / hrs);
+      const mlKgShift = vol / w;
+
+      outKcal.textContent = fmt(totalKcal, 0);
+      outKcalKgShift.textContent = fmt(kcalKgShift, 1);
+      outKcalKgDay.textContent = fmt(kcalKgDay, 0);
+      outMlKgShift.textContent = fmt(mlKgShift, 1);
+
+      const pct = (kcalKgDay / goal) * 100;
+      const barPct = Math.max(0, Math.min(140, pct));
+      goalFill.style.width = barPct + "%";
+
+      let kind = "good", label = "On target";
+      if (pct < 70){ kind = "bad"; label = "Low"; }
+      else if (pct < 90){ kind = "warn"; label = "Borderline"; }
+      setStatus(kind, label);
+
+      if (pct < 70){
+        interpretation.textContent = "Below goal. Recheck transfer, losses, and consider a supplementation plan.";
+      } else if (pct < 90){
+        interpretation.textContent = "Near goal. Trend weight and I/Os; adjust if trajectory is off.";
+      } else {
+        interpretation.textContent = "Meets goal. Correlate with clinical course and weight trend.";
+      }
+
+      const gap = goal - kcalKgDay;                  // kcal/kg/day
+      const gapShift = gap > 0 ? gap * (hrs / 24) : 0; // kcal/kg/shift
+      const mlKgShiftNeeded = gap > 0 ? (gapShift / dens) : 0;
+
+      if (gap > 0){
+        gapText.innerHTML =
+          `Shortfall ~ <span class="mono">${fmt(gapShift,1)} kcal/kg/shift</span>, ` +
+          `or ~ <span class="mono">${fmt(mlKgShiftNeeded,1)} mL/kg/shift</span> at ` +
+          `<span class="mono">${fmt(dens,2)} kcal/mL</span>.`;
+      } else {
+        gapText.textContent = "No calculated shortfall versus the selected goal.";
+      }
+    }
+
+    $("calcBtn").addEventListener("click", calc);
+    $("clearBtn").addEventListener("click", () => {
+      weightKg.value = "";
+      shiftHours.value = "";
+      volumeMl.value = "";
+      kcalPerMl.value = "0.67";
+      goalPreset.value = "100";
+      goalCustom.value = "";
+      goalCustom.disabled = true;
+      clearOutputs();
+    });
+
+    goalPreset.addEventListener("change", () => { updateCustom(); calc(); });
+
+    [weightKg, shiftHours, volumeMl, kcalPerMl, goalCustom].forEach(el => {
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter") calc(); });
+      el.addEventListener("input", () => {
+        const any = [weightKg.value, shiftHours.value, volumeMl.value].some(v => String(v).trim().length > 0);
+        if (any) calc();
+      });
+    });
+
+    updateCustom();
+    clearOutputs();
+  </script>
+</body>
+</html>
