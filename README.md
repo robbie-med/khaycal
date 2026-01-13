@@ -1,4 +1,4 @@
-# Peds Shift Intake Calculator
+# Khaycal Shift Intake Calculator
 
 A single-page, offline calculator for inpatient pediatrics.
 
