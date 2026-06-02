@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Peds Shift Intake</title>
   <meta name="description" content="Pediatric shift intake calculator — kcal/kg/shift from total volume, shift duration, and weight."/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="Shift Intake"/>
+  <meta name="theme-color" content="#2563eb"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml"/>
+  <link rel="apple-touch-icon" href="/icon.svg"/>
   <style>
     :root {
       --bg: #f1f5f9;
@@ -17,21 +25,23 @@
       --warn: #d97706;
       --bad: #dc2626;
       --radius: 12px;
+      --tab-h: 56px;  /* mobile tab bar height */
       --mono: ui-monospace, 'SF Mono', Menlo, monospace;
       --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
     body {
       font-family: var(--sans);
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      min-height: 100dvh;
+      min-height: 100%;
       display: flex;
       flex-direction: column;
     }
 
-    /* ── Layout ── */
+    /* ── Desktop layout ── */
     .wrap {
       max-width: 920px;
       margin: 0 auto;
@@ -42,11 +52,7 @@
       gap: 14px;
     }
     header { border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-    h1 {
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-    }
+    h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
     .sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
 
     main {
@@ -55,7 +61,6 @@
       gap: 12px;
       align-items: start;
     }
-    @media (max-width: 680px) { main { grid-template-columns: 1fr; } }
 
     /* ── Cards ── */
     .card {
@@ -75,11 +80,7 @@
     }
 
     /* ── Fields ── */
-    .field-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .field label {
       display: block;
       font-size: 12px;
@@ -104,11 +105,7 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(37,99,235,.1);
     }
-    .field input:disabled {
-      background: var(--bg);
-      color: #94a3b8;
-      cursor: not-allowed;
-    }
+    .field input:disabled { background: var(--bg); color: #94a3b8; cursor: not-allowed; }
 
     /* ── Buttons ── */
     .actions { display: flex; gap: 8px; margin-top: 12px; }
@@ -128,11 +125,7 @@
     .btn-ghost:hover { background: var(--bg); }
 
     /* ── Stats ── */
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .stat {
       padding: 11px 12px;
       border-radius: 10px;
@@ -157,11 +150,7 @@
       padding: 1px 5px;
       color: var(--muted);
     }
-    .stat-value {
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -.02em;
-    }
+    .stat-value { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
 
     /* ── Goal / Status ── */
     .goal-section {
@@ -171,21 +160,14 @@
       border: 1px solid var(--border);
       background: var(--bg);
     }
-    .goal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
+    .goal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .goal-header-label { font-size: 12px; font-weight: 600; color: var(--muted); }
     .status-badge {
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 12px; font-weight: 600;
       padding: 3px 10px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      color: var(--muted);
-      background: #fff;
+      color: var(--muted); background: #fff;
       white-space: nowrap;
     }
     .status-badge.good { color: var(--good); border-color: rgba(22,163,74,.3); background: rgba(22,163,74,.07); }
@@ -194,9 +176,7 @@
 
     .progress-bar { height: 6px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
     .progress-fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
+      height: 100%; width: 0%; border-radius: 999px;
       background: linear-gradient(90deg, var(--good), var(--accent));
       transition: width .22s ease;
     }
@@ -207,29 +187,19 @@
     /* ── Collapsibles ── */
     details { margin-top: 10px; }
     summary {
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      list-style: none;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      user-select: none;
-      padding: 2px 0;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--muted); list-style: none;
+      display: flex; align-items: center; gap: 5px;
+      user-select: none; padding: 2px 0;
     }
     summary::-webkit-details-marker { display: none; }
     summary::before { content: '▸'; font-size: 9px; transition: transform .13s; }
     details[open] summary::before { transform: rotate(90deg); }
     .details-body {
-      margin-top: 8px;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #fff;
+      margin-top: 8px; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: 8px; background: #fff;
     }
-    .details-body p,
-    .details-body li { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .details-body p, .details-body li { font-size: 12px; color: var(--muted); line-height: 1.5; }
     .details-body ul { margin: 4px 0 0 14px; padding: 0; }
     .details-body li { margin-bottom: 4px; }
 
@@ -244,6 +214,104 @@
     }
     footer a { color: var(--muted); text-decoration: none; font-weight: 600; }
     footer a:hover { color: var(--accent); }
+
+    /* ════════════════════════════════════════════
+       MOBILE  (≤ 680px)  —  tabbed panel layout
+       ════════════════════════════════════════════ */
+    @media (max-width: 680px) {
+
+      body { background: var(--card); }
+
+      /* Remove desktop chrome */
+      .wrap { padding: 0; gap: 0; }
+      header {
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        background: var(--card);
+        z-index: 10;
+      }
+      h1 { font-size: 16px; }
+      .sub { font-size: 12px; }
+
+      /* Main becomes a full-height panel container */
+      main {
+        display: block;
+        padding-bottom: var(--tab-h);
+      }
+
+      /* Each card becomes a full-width panel, hidden by default */
+      .card {
+        display: none;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 16px;
+        min-height: calc(100dvh - 56px - var(--tab-h));
+        border-bottom: 1px solid var(--border);
+      }
+      .card.active { display: block; }
+
+      /* Larger tap targets on mobile */
+      .field-grid { gap: 12px; }
+      .field input, .field select {
+        padding: 11px 12px;
+        font-size: 16px; /* prevent iOS zoom */
+      }
+      .actions { margin-top: 14px; }
+      .btn { padding: 12px 20px; font-size: 14px; flex: 1; text-align: center; }
+
+      /* Stats larger on mobile */
+      .stat-value { font-size: 26px; }
+      .stat { padding: 13px 14px; }
+
+      /* Tab bar fixed at bottom */
+      .tab-bar {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: var(--tab-h);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: var(--card);
+        border-top: 1px solid var(--border);
+        z-index: 20;
+        /* Safe area for notched phones */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .tab-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        transition: color .12s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .tab-btn.active { color: var(--accent); }
+      .tab-btn .tab-dot {
+        width: 4px; height: 4px;
+        border-radius: 50%;
+        background: var(--accent);
+        opacity: 0;
+        margin-top: 1px;
+      }
+      .tab-btn.active .tab-dot { opacity: 1; }
+
+      /* Footer hidden on mobile (space-constrained) */
+      footer { display: none; }
+    }
+
+    /* Desktop: hide tab bar entirely */
+    .tab-bar { display: none; }
   </style>
 </head>
 <body>
@@ -255,7 +323,7 @@
 
     <main>
       <!-- Inputs -->
-      <section class="card">
+      <section class="card active" id="panel-inputs">
         <div class="card-label">Inputs</div>
         <div class="field-grid">
           <div class="field">
@@ -313,7 +381,7 @@
       </section>
 
       <!-- Results -->
-      <section class="card">
+      <section class="card" id="panel-results">
         <div class="card-label">Results</div>
 
         <div class="stats">
@@ -361,6 +429,28 @@
     </main>
   </div>
 
+  <!-- Mobile tab bar (hidden on desktop via CSS) -->
+  <nav class="tab-bar" role="tablist" aria-label="App sections">
+    <button class="tab-btn active" id="tab-inputs" role="tab" aria-selected="true" aria-controls="panel-inputs">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <line x1="8" y1="9" x2="16" y2="9"/>
+        <line x1="8" y1="13" x2="16" y2="13"/>
+        <line x1="8" y1="17" x2="12" y2="17"/>
+      </svg>
+      Inputs
+      <span class="tab-dot"></span>
+    </button>
+    <button class="tab-btn" id="tab-results" role="tab" aria-selected="false" aria-controls="panel-results">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <polyline points="3 17 8 12 13 15 21 7"/>
+        <line x1="3" y1="21" x2="21" y2="21"/>
+      </svg>
+      Results
+      <span class="tab-dot"></span>
+    </button>
+  </nav>
+
   <footer>
     <a href="https://robbiemed.org" target="_blank" rel="noopener">robbie.med</a>
     &ensp;·&ensp;
@@ -372,6 +462,25 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
+    /* ── Mobile tab switching ── */
+    const isMobile = () => window.innerWidth <= 680;
+
+    function showTab(name) {
+      if (!isMobile()) return;
+      ["inputs", "results"].forEach((t) => {
+        const panel = $("panel-" + t);
+        const btn   = $("tab-" + t);
+        const active = t === name;
+        panel.classList.toggle("active", active);
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", active);
+      });
+    }
+
+    $("tab-inputs").addEventListener("click",  () => showTab("inputs"));
+    $("tab-results").addEventListener("click", () => showTab("results"));
+
+    /* ── Calculator ── */
     const weightKg    = $("weightKg");
     const shiftHours  = $("shiftHours");
     const volumeMl    = $("volumeMl");
@@ -392,9 +501,7 @@
       const n = Number(String(x).trim());
       return Number.isFinite(n) ? n : NaN;
     }
-    function fmt(n, digits = 1) {
-      return Number.isFinite(n) ? n.toFixed(digits) : "—";
-    }
+    function fmt(n, digits = 1) { return Number.isFinite(n) ? n.toFixed(digits) : "—"; }
     function getGoal() {
       return goalPreset.value === "custom" ? toNum(goalCustom.value) : toNum(goalPreset.value);
     }
@@ -420,7 +527,7 @@
       if (!isCustom) goalCustom.value = "";
     }
 
-    function calc() {
+    function calc(autoSwitch = false) {
       const w    = toNum(weightKg.value);
       const hrs  = toNum(shiftHours.value);
       const vol  = toNum(volumeMl.value);
@@ -428,11 +535,11 @@
       const goal = getGoal();
 
       const errs = [];
-      if (!(w > 0))             errs.push("Weight");
+      if (!(w > 0))                errs.push("Weight");
       if (!(hrs > 0 && hrs <= 24)) errs.push("Shift");
-      if (!(vol >= 0))          errs.push("Volume");
-      if (!(dens > 0))          errs.push("Density");
-      if (!(goal > 0))          errs.push("Goal");
+      if (!(vol >= 0))             errs.push("Volume");
+      if (!(dens > 0))             errs.push("Density");
+      if (!(goal > 0))             errs.push("Goal");
 
       if (errs.length) {
         clearOutputs();
@@ -457,8 +564,8 @@
       goalFill.style.width = barPct + "%";
 
       let kind = "good", label = "On target";
-      if (pct < 70)      { kind = "bad";  label = "Low"; }
-      else if (pct < 90) { kind = "warn"; label = "Borderline"; }
+      if (pct < 70)       { kind = "bad";  label = "Low"; }
+      else if (pct < 90)  { kind = "warn"; label = "Borderline"; }
       setStatus(kind, label);
 
       if (pct < 70) {
@@ -469,9 +576,9 @@
         interpretation.textContent = "Meets goal. Correlate with clinical course and weight trend.";
       }
 
-      const gap           = goal - kcalKgDay;
-      const gapShift      = gap > 0 ? gap * (hrs / 24) : 0;
-      const mlKgNeeded    = gap > 0 ? gapShift / dens : 0;
+      const gap        = goal - kcalKgDay;
+      const gapShift   = gap > 0 ? gap * (hrs / 24) : 0;
+      const mlKgNeeded = gap > 0 ? gapShift / dens : 0;
 
       if (gap > 0) {
         gapText.innerHTML =
@@ -480,9 +587,12 @@
       } else {
         gapText.textContent = "No shortfall vs. selected goal.";
       }
+
+      /* On mobile, pressing Calculate switches to the Results tab */
+      if (autoSwitch) showTab("results");
     }
 
-    $("calcBtn").addEventListener("click", calc);
+    $("calcBtn").addEventListener("click", () => calc(true));
     $("clearBtn").addEventListener("click", () => {
       weightKg.value   = "";
       shiftHours.value = "";
@@ -496,16 +606,21 @@
 
     goalPreset.addEventListener("change", () => { updateCustom(); calc(); });
 
-    [weightKg, shiftHours, volumeMl, kcalPerMl, goalCustom].forEach(el => {
-      el.addEventListener("keydown", (e) => { if (e.key === "Enter") calc(); });
+    [weightKg, shiftHours, volumeMl, kcalPerMl, goalCustom].forEach((el) => {
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter") calc(true); });
       el.addEventListener("input", () => {
-        const any = [weightKg.value, shiftHours.value, volumeMl.value].some(v => v.trim().length > 0);
-        if (any) calc();
+        const any = [weightKg.value, shiftHours.value, volumeMl.value].some((v) => v.trim().length > 0);
+        if (any) calc(false); /* auto-calc without tab switch on live typing */
       });
     });
 
     updateCustom();
     clearOutputs();
+
+    /* ── Service Worker ── */
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {/* silent */});
+    }
   </script>
 </body>
 </html>
